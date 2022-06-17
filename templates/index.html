@@ -1,0 +1,394 @@
+<!doctype html>
+
+<!--
+SPDX-License-Identifier: AGPL-3.0-or-later
+Copyright (C) 2022  Philipp Emanuel Weidmann <pew@worldwidemann.com>
+-->
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>PastEvents.org &mdash; A structured, searchable archive of Wikipedia's "Current Events" portal</title>
+
+    <link rel="icon" href="data:,">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css"
+        integrity="sha256-+xdjtZ+fV2QpS1r5+lJQg1rmCCgv5vLyITpZUqrPH78=" crossorigin="anonymous">
+
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css"
+        integrity="sha256-cwDJdubMsvIJcAYY5EXUZAuQLxSlELxFYQlxvsxdYs8=" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nouislider@15.6.0/dist/nouislider.min.css"
+        integrity="sha256-nckVXP1jMdH1YpiBrAvGOSgkP6TB2DsXzkkhtSAL4K4=" crossorigin="anonymous">
+
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/tabulator-tables@5.2.7/dist/css/tabulator_bootstrap5.min.css"
+        integrity="sha256-CVyaClnqX5zXWN57cr/dWjxquTO9tOjv31fg6u/jx/U=" crossorigin="anonymous">
+
+    <style>
+        a {
+            text-decoration: none;
+        }
+
+        .fs-7 {
+            font-size: 0.9rem !important;
+        }
+
+        .bootstrap-select.form-control {
+            /* Color from Bootstrap's `form-control` class. */
+            border: 1px solid #ced4da;
+            margin-top: -1px;
+        }
+
+        .bootstrap-select>.dropdown-toggle {
+            background-color: #fff;
+        }
+
+        .bootstrap-select>.dropdown-toggle.bs-placeholder,
+        .bootstrap-select>.dropdown-toggle.bs-placeholder:active,
+        .bootstrap-select>.dropdown-toggle.bs-placeholder:focus,
+        .bootstrap-select>.dropdown-toggle.bs-placeholder:hover {
+            /* Color from Bootstrap's `form-control` class. */
+            color: #6c757d;
+        }
+
+        .bootstrap-select .dropdown-toggle .filter-option-inner-inner {
+            text-overflow: ellipsis;
+        }
+
+        .noUi-target {
+            margin: 3px 16px 25px 16px;
+            border-radius: 0;
+        }
+
+        .noUi-horizontal {
+            height: 12px;
+        }
+
+        .noUi-horizontal .noUi-handle {
+            height: 18px;
+            top: -4px;
+        }
+
+        .noUi-handle::after,
+        .noUi-handle::before {
+            top: 1px;
+        }
+
+        .noUi-connect {
+            /* Color from Bootstrap's `--bs-yellow` variable. */
+            background: #ffc107;
+        }
+
+        .noUi-pips {
+            padding: 0;
+            font-size: 13px;
+        }
+
+        .noUi-marker-horizontal.noUi-marker-large {
+            height: 12px;
+        }
+
+        .noUi-tooltip {
+            display: none;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .noUi-state-drag .noUi-tooltip {
+            display: block;
+        }
+
+        .tabulator-row.tabulator-row-even {
+            background-color: #fff;
+        }
+
+        #events {
+            /* Color from Tabulator's `tabulator-header` class. */
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        #events a.external {
+            font-size: 0.9rem;
+            font-style: italic;
+            /* Color from Bootstrap's `link-success` class. */
+            color: #198754;
+        }
+
+        #events a.external:focus,
+        #events a.external:hover {
+            /* Color from Bootstrap's `link-success` class. */
+            color: #146c43;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container-xxl vh-100 d-flex flex-column">
+        <div class="row py-2 mb-1">
+            <div class="col-3 fs-4 d-flex align-items-center">
+                <a href="/" class="text-dark">Past<strong>Events</strong>.org</a>
+            </div>
+            <div class="col text-end fs-7">
+                A structured, searchable archive of Wikipedia's <a
+                    href="https://en.wikipedia.org/wiki/Portal:Current_events">"Current Events"</a> portal
+                <br>
+                More than <strong>90,000 events</strong> spanning <strong>20 years</strong> available, updated daily
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col">
+                <div class="input-group">
+                    <input type="search" id="search" class="form-control"
+                        placeholder="Search event description and context">
+                    <button type="button" class="btn btn-outline-secondary fw-bold" data-bs-toggle="modal"
+                        data-bs-target="#search-help">?</button>
+                </div>
+            </div>
+            <div class="col-4">
+                <select id="categories" class="selectpicker form-control" multiple title="Select categories">
+                    <option>Armed conflicts and attacks</option>
+                    <option>Arts and culture</option>
+                    <option>Business and economy</option>
+                    <option>Disasters and accidents</option>
+                    <option>Health and environment</option>
+                    <option>International relations</option>
+                    <option>Law and crime</option>
+                    <option>Politics and elections</option>
+                    <option>Science and technology</option>
+                    <option>Sports</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="row py-3">
+            <div class="col">
+                <div id="date-range"></div>
+            </div>
+        </div>
+
+        <div id="events" class="flex-grow-1"></div>
+
+        <div class="row pt-3 pb-2 fs-7">
+            <div class="col">
+                Made with &#128148; by <a href="https://worldwidemann.com/">Philipp Emanuel Weidmann</a>
+            </div>
+            <div class="col text-end">
+                <a href="#" data-bs-toggle="modal" data-bs-target="#licenses">Code and content licenses</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="search-help" tabindex="-1" aria-labelledby="search-help-label" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="search-help-label">Query syntax</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        The search function ignores capitalization and automatically finds singular, plural, and other
+                        derived forms of the search terms.
+                    </p>
+                    <p>
+                        When multiple search terms are given, the search finds events containing <strong>all</strong> of
+                        the terms, in any order.
+                    </p>
+                    <p>
+                        If terms are separated by the word <kbd>OR</kbd>, the search finds events containing
+                        <strong>any</strong> of the terms, in any order.
+                    </p>
+                    <p>
+                        If a search term is immediately preceded by a minus sign (<kbd>-</kbd>), the search finds events
+                        that do <strong>not</strong> contain that term.
+                    </p>
+                    <p>
+                        Multiple terms enclosed in double quotes (<kbd>"</kbd>) must appear in the exact order given.
+                    </p>
+                    <hr>
+                    <h5>Examples</h5>
+                    <p>
+                        Find events mentioning <strong>both</strong> Canada <strong>and</strong> Mexico:
+                        <br>
+                        <kbd>canada mexico</kbd>
+                    </p>
+                    <p>
+                        Find events mentioning <strong>either</strong> Canada <strong>or</strong> Mexico:
+                        <br>
+                        <kbd>canada OR mexico</kbd>
+                    </p>
+                    <p>
+                        Find events mentioning <strong>both</strong> Canada <strong>and</strong> Mexico, <strong>but
+                            not</strong> the United States:
+                        <br>
+                        <kbd>canada mexico -"united states"</kbd>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="licenses" tabindex="-1" aria-labelledby="licenses-label" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="licenses-label">Code and content licenses</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="fw-bold">
+                        PastEvents.org is built <em>entirely</em> using Free and Open Source Software and Free Content.
+                    </p>
+                    <p>
+                        The code of this website, of the backend powering it, and of the system that downloads and
+                        parses event data from Wikipedia is available <a href="https://github.com/p-e-w/pastevents">on
+                            GitHub</a> and may be used freely in accordance with the <a
+                            href="https://www.gnu.org/licenses/agpl-3.0.html">GNU Affero General Public License</a>.
+                    </p>
+                    <p>
+                        PastEvents.org depends on many other Free Software packages, including
+                        <a href="https://www.python.org/">Python</a>,
+                        <a href="https://www.postgresql.org/">PostgreSQL</a>,
+                        <a href="https://www.psycopg.org/">Psycopg</a>,
+                        <a href="https://www.sqlalchemy.org/">SQLAlchemy</a>,
+                        <a href="https://gunicorn.org/">Gunicorn</a>,
+                        <a href="https://flask.palletsprojects.com/">Flask</a>,
+                        <a href="https://requests.readthedocs.io/">Requests</a>,
+                        <a href="https://www.crummy.com/software/BeautifulSoup/">Beautiful Soup</a>,
+                        <a href="https://dateutil.readthedocs.io/">Dateutil</a>,
+                        <a href="https://jquery.com/">jQuery</a>,
+                        <a href="https://getbootstrap.com/">Bootstrap</a>,
+                        <a href="https://developer.snapappointments.com/bootstrap-select/">Bootstrap-Select</a>,
+                        <a href="https://refreshless.com/nouislider/">noUiSlider</a>,
+                        <a href="http://tabulator.info/">Tabulator</a>, and
+                        <a href="https://day.js.org/">Day.js</a>.
+                        See the individual websites for more information.
+                    </p>
+                    <p>
+                        All events on PastEvents.org come from Wikipedia's
+                        <a href="https://en.wikipedia.org/wiki/Portal:Current_events">"Current Events"</a> portal
+                        and were painstakingly assembled and curated by Wikipedia contributors.
+                        Without their incredible effort, this website could not exist.
+                        The original event content from Wikipedia, and the processed tabular version presented
+                        on this website, are available under the terms of the
+                        <a href="https://creativecommons.org/licenses/by-sa/3.0/">Creative Commons
+                            Attribution-ShareAlike License</a>.
+                        See Wikipedia's <a
+                            href="https://en.wikipedia.org/wiki/Wikipedia:Reusing_Wikipedia_content">official page on
+                            reusing Wikipedia content</a> for more information.
+                    </p>
+                    <p>
+                        Many event descriptions on this website contain links to external reference material
+                        such as news media websites. Content on those websites is <strong>not</strong> covered by
+                        Wikipedia's Free Content license.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"
+        integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha256-JRXjfu4x9e89ZZsh3MhNxupzKwaHLaUQeLW1Jt40wME=" crossorigin="anonymous"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"
+        integrity="sha256-obLPuLg5xxN2MC2szEaXLaN8tEKYgeCMn+TSPMxqOfE=" crossorigin="anonymous"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/nouislider@15.6.0/dist/nouislider.min.js"
+        integrity="sha256-HzOwAgcEXe5/3RZFpCL8TWpHyN1naLcUuQdayYiGkoY=" crossorigin="anonymous"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/tabulator-tables@5.2.7/dist/js/tabulator.min.js"
+        integrity="sha256-NTsalVU/wwH7xx3IDjWj1/SpfRrr0nI3937x04vbRss=" crossorigin="anonymous"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.2/dayjs.min.js"
+        integrity="sha256-iu/zLUB+QgISXBLCW/mcDi/rnf4m4uEDO0wauy76x7U=" crossorigin="anonymous"></script>
+
+    <script>
+        const searchElement = $('#search');
+        const categoriesElement = $('#categories');
+        const dateRangeElement = $('#date-range')[0];
+
+        const minDate = dayjs(new Date(2003, 0, 1));
+        const maxDate = dayjs();
+
+        const pipValues = [];
+
+        let date = minDate;
+
+        while (date.isBefore(maxDate)) {
+            pipValues.push(date.unix());
+            date = date.add(1, 'year');
+        }
+
+        noUiSlider.create(dateRangeElement, {
+            range: {
+                min: minDate.unix(),
+                max: maxDate.unix()
+            },
+            start: [minDate.unix(), maxDate.unix()],
+            connect: true,
+            behaviour: 'drag',
+            pips: {
+                mode: 'values',
+                values: pipValues,
+                format: {
+                    to: value => dayjs.unix(value).format('YYYY')
+                }
+            },
+            tooltips: {
+                to: value => dayjs.unix(value).format('YYYY-MM-DD')
+            }
+        });
+
+        // https://github.com/olifolkerd/tabulator/issues/1811
+        function htmlWrapFormatter(cell, formatterParams, onRendered) {
+            cell.getElement().style.whiteSpace = 'normal';
+            return this.emptyToSpace(cell.getValue());
+        }
+
+        const eventsTable = new Tabulator('#events', {
+            layout: 'fitColumns',
+            columns: [
+                { title: 'Date', field: 'date', formatter: 'html', width: 120, resizable: false },
+                { title: 'Event', field: 'description', formatter: htmlWrapFormatter, variableHeight: true, headerSort: false, resizable: false },
+                { title: 'Context', field: 'context', formatter: htmlWrapFormatter, variableHeight: true, width: 300, headerSort: false, resizable: false },
+                { title: 'Category', field: 'category', width: 230, headerSort: false, resizable: false }
+            ],
+            ajaxURL: '/events',
+            progressiveLoad: 'scroll',
+            progressiveLoadScrollMargin: 5000,
+            paginationSize: 100,
+            filterMode: 'remote',
+            sortMode: 'remote',
+            initialSort: [
+                { column: 'date', dir: 'desc' }
+            ],
+            selectable: false
+        });
+
+        function updateFilter() {
+            const dateRange = dateRangeElement.noUiSlider.get(true);
+
+            eventsTable.setFilter([
+                { field: 'search_text', type: 'like', value: searchElement.val() },
+                { field: 'category', type: 'in', value: categoriesElement.val() },
+                { field: 'date', type: '>=', value: dayjs.unix(dateRange[0]).format('YYYY-MM-DD') },
+                { field: 'date', type: '<=', value: dayjs.unix(dateRange[1]).format('YYYY-MM-DD') }
+            ]);
+        }
+
+        searchElement.on('input', updateFilter);
+        categoriesElement.on('change', updateFilter);
+        dateRangeElement.noUiSlider.on('change', updateFilter);
+    </script>
+</body>
+
+</html>
