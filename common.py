@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # Copyright (C) 2022  Philipp Emanuel Weidmann <pew@worldwidemann.com>
 
-import locale
 import os
 
 from sqlalchemy import (
@@ -18,10 +17,6 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 
 
 WIKIPEDIA_URL = "https://en.wikipedia.org"
-
-
-# Ensure behavior of date parsing and formatting is independent of system locale.
-locale.setlocale(locale.LC_TIME, "en_US")
 
 
 engine = create_engine(os.environ["DATABASE_URL"])
