@@ -19,7 +19,7 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 WIKIPEDIA_URL = "https://en.wikipedia.org"
 
 
-engine = create_engine(os.environ["DATABASE_URL"])
+engine = create_engine(os.environ["DATABASE_URL"], pool_pre_ping=True)
 
 Session = sessionmaker(engine, autoflush=False, autocommit=False)
 
