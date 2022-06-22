@@ -272,6 +272,7 @@ Copyright (C) 2022  Philipp Emanuel Weidmann <pew@worldwidemann.com>
                         <a href="https://www.crummy.com/software/BeautifulSoup/">Beautiful Soup</a>,
                         <a href="https://dateutil.readthedocs.io/">Dateutil</a>,
                         <a href="https://jquery.com/">jQuery</a>,
+                        <a href="https://lodash.com/">Lodash</a>,
                         <a href="https://getbootstrap.com/">Bootstrap</a>,
                         <a href="https://developer.snapappointments.com/bootstrap-select/">Bootstrap-Select</a>,
                         <a href="https://refreshless.com/nouislider/">noUiSlider</a>,
@@ -304,6 +305,9 @@ Copyright (C) 2022  Philipp Emanuel Weidmann <pew@worldwidemann.com>
 
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"
         integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"
+        integrity="sha256-qXBd/EfAdjOA2FGrGAG+b3YBn2tn5A6bhz+LSgYD96k=" crossorigin="anonymous"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js"
         integrity="sha256-JRXjfu4x9e89ZZsh3MhNxupzKwaHLaUQeLW1Jt40wME=" crossorigin="anonymous"></script>
@@ -395,7 +399,7 @@ Copyright (C) 2022  Philipp Emanuel Weidmann <pew@worldwidemann.com>
             ]);
         }
 
-        searchElement.on('input', updateFilter);
+        searchElement.on('input', _.debounce(updateFilter, 500));
         categoriesElement.on('change', updateFilter);
         dateRangeElement.noUiSlider.on('change', updateFilter);
     </script>
