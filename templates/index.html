@@ -63,6 +63,7 @@ Copyright (C) 2022  Philipp Emanuel Weidmann <pew@worldwidemann.com>
         .noUi-target {
             margin: 3px 16px 25px 16px;
             border-radius: 0;
+            z-index: 3;
         }
 
         .noUi-horizontal {
@@ -86,11 +87,19 @@ Copyright (C) 2022  Philipp Emanuel Weidmann <pew@worldwidemann.com>
 
         .noUi-pips {
             padding: 0;
+            height: 0;
             font-size: 13px;
         }
 
         .noUi-marker-horizontal.noUi-marker-large {
-            height: 12px;
+            height: 11px;
+        }
+
+        /* Hide every second pip label on small screens to avoid excessive text density. */
+        @media (max-width: 1000px) {
+            .noUi-value-horizontal:nth-child(4n) {
+                display: none;
+            }
         }
 
         .noUi-tooltip {
@@ -339,6 +348,7 @@ Copyright (C) 2022  Philipp Emanuel Weidmann <pew@worldwidemann.com>
             pips: {
                 mode: 'values',
                 values: pipValues,
+                density: 1000,
                 format: {
                     to: value => dayjs.unix(value).format('YYYY')
                 }
@@ -358,9 +368,9 @@ Copyright (C) 2022  Philipp Emanuel Weidmann <pew@worldwidemann.com>
             layout: 'fitColumns',
             columns: [
                 { title: 'Date', field: 'date', formatter: 'html', width: 120, resizable: false },
-                { title: 'Event', field: 'description', formatter: htmlWrapFormatter, variableHeight: true, headerSort: false, resizable: false },
-                { title: 'Context', field: 'context', formatter: htmlWrapFormatter, variableHeight: true, width: 300, headerSort: false, resizable: false },
-                { title: 'Category', field: 'category', width: 230, headerSort: false, resizable: false }
+                { title: 'Event', field: 'description', formatter: htmlWrapFormatter, variableHeight: true, widthGrow: 3, headerSort: false, resizable: false },
+                { title: 'Context', field: 'context', formatter: htmlWrapFormatter, variableHeight: true, widthGrow: 1, headerSort: false, resizable: false },
+                { title: 'Category', field: 'category', formatter: 'textarea', widthGrow: 1, headerSort: false, resizable: false }
             ],
             ajaxURL: '/events',
             progressiveLoad: 'scroll',
