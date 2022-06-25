@@ -3,12 +3,16 @@
 
 from copy import copy
 from datetime import datetime, date
+from argparse import ArgumentParser
 
 import requests
 from dateutil.relativedelta import relativedelta
 from bs4 import BeautifulSoup
 
 from common import Session, Base, Event, engine, WIKIPEDIA_URL
+
+
+MIN_DATE = date(2003, 1, 1)
 
 
 def normalize_category(category):
@@ -126,15 +130,15 @@ def update_events(start_date, end_date):
         "format": "json",
     }
 
-    with Session() as session:
+    with Session.begin() as session:
         session.query(Event).filter(Event.date.between(start_date, end_date)).delete(
             synchronize_session="fetch"
         )
 
-        date = start_date
+        month = start_date.replace(day=1)
 
-        while date <= end_date:
-            parameters["page"] = f"Portal:Current_events/{date:%B_%-Y}"
+        while month <= end_date:
+            parameters["page"] = f"Portal:Current_events/{month:%B_%-Y}"
             response = requests_session.get(
                 f"{WIKIPEDIA_URL}/w/api.php", params=parameters
             )
@@ -142,17 +146,30 @@ def update_events(start_date, end_date):
             if response.status_code == 200:
                 print(f'Parsing events from page {parameters["page"]} ...')
                 for event in get_events(response.json()["parse"]["text"]["*"]):
-                    session.add(event)
+                    if start_date <= event.date <= end_date:
+                        session.add(event)
             else:
-                print(
+                raise RuntimeError(
                     f'Request for page {parameters["page"]} failed with {response.status_code}.'
                 )
 
-            date += relativedelta(months=1)
-
-        session.commit()
+            month += relativedelta(months=1)
 
 
-Base.metadata.create_all(engine)
+if __name__ == "__main__":
+    parser = ArgumentParser()
+    parser.add_argument("--days", type=int)
+    arguments = parser.parse_args()
 
-update_events(date(2003, 1, 1), date.today())
+    Base.metadata.create_all(engine)
+
+    if arguments.days is None:
+        start_date = MIN_DATE
+        end_date = date.today()
+    else:
+        start_date = max(
+            date.today() - relativedelta(days=arguments.days - 1), MIN_DATE
+        )
+        end_date = date.today()
+
+    update_events(start_date, end_date)
