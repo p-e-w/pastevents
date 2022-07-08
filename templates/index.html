@@ -34,8 +34,21 @@ Copyright (C) 2022  Philipp Emanuel Weidmann <pew@worldwidemann.com>
             text-decoration: none;
         }
 
+        input:placeholder-shown {
+            text-overflow: ellipsis;
+        }
+
         .fs-7 {
             font-size: 0.9rem !important;
+        }
+
+        #logo-column {
+            /* Ensure the entire logo remains clickable even when overlapped by the adjacent column. */
+            z-index: 0;
+        }
+
+        #categories-column {
+            min-width: 10rem;
         }
 
         .bootstrap-select.form-control {
@@ -95,10 +108,25 @@ Copyright (C) 2022  Philipp Emanuel Weidmann <pew@worldwidemann.com>
             height: 11px;
         }
 
-        /* Hide every second pip label on small screens to avoid excessive text density. */
+        /* On small screens, hide every second pip label to avoid excessive text density. */
         @media (max-width: 1000px) {
             .noUi-value-horizontal:nth-child(4n) {
                 display: none;
+            }
+
+            .noUi-marker-horizontal.noUi-marker-large:nth-child(4n+3) {
+                height: 7px;
+            }
+        }
+
+        /* On very small screens, hide every second of the remaining pip labels. */
+        @media (max-width: 550px) {
+            .noUi-value-horizontal:nth-child(8n+6) {
+                display: none;
+            }
+
+            .noUi-marker-horizontal.noUi-marker-large:nth-child(8n+5) {
+                height: 7px;
             }
         }
 
@@ -110,10 +138,6 @@ Copyright (C) 2022  Philipp Emanuel Weidmann <pew@worldwidemann.com>
 
         .noUi-state-drag .noUi-tooltip {
             display: block;
-        }
-
-        .tabulator-row.tabulator-row-even {
-            background-color: #fff;
         }
 
         #events {
@@ -133,20 +157,103 @@ Copyright (C) 2022  Philipp Emanuel Weidmann <pew@worldwidemann.com>
             /* Color from Bootstrap's `link-success` class. */
             color: #146c43;
         }
+
+        .tabulator .tabulator-tableholder {
+            /*
+            This shouldn't be necessary since Tabulator is supposed to guarantee
+            that the columns always fit the table width, but there appear to be bugs
+            that prevent that mechanism from working correctly in some situations.
+            */
+            overflow-x: hidden;
+        }
+
+        .tabulator-row.tabulator-row-even {
+            background-color: #fff;
+        }
+
+        .tabulator-row .tabulator-cell {
+            overflow: visible;
+        }
+
+        .tabulator-row .tabulator-responsive-collapse {
+            width: calc(100vw - var(--bs-gutter-x));
+            padding: 0 12px;
+            border-top: none;
+            border-bottom: none;
+            font-size: 0.9rem;
+            white-space: normal;
+        }
+
+        .mobile-visible {
+            display: none;
+        }
+
+        /* Mobile device mode. */
+        @media (max-width: 650px),
+        (max-height: 550px) {
+            .mobile-visible {
+                display: unset;
+            }
+
+            .mobile-hidden {
+                display: none;
+            }
+
+            .container-xxl {
+                --bs-gutter-x: 1rem;
+            }
+
+            #header-row {
+                padding-top: 0.25rem !important;
+                padding-bottom: 0.25rem !important;
+                margin-bottom: 0 !important;
+            }
+
+            #categories-column {
+                padding-left: 0;
+            }
+
+            #date-range-row {
+                padding-top: 0.5rem !important;
+                padding-bottom: 0.5rem !important;
+            }
+
+            #events {
+                margin-left: calc(-0.5 * var(--bs-gutter-x));
+                margin-right: calc(-0.5 * var(--bs-gutter-x));
+                border-bottom: none;
+            }
+
+            .tabulator .tabulator-header .tabulator-col .tabulator-col-content {
+                padding: 5px calc(0.5 * var(--bs-gutter-x));
+            }
+
+            .tabulator-row .tabulator-cell {
+                padding: 12px calc(0.5 * var(--bs-gutter-x));
+            }
+
+            .tabulator-row .tabulator-responsive-collapse {
+                width: 100vw;
+                padding: 0 calc(0.5 * var(--bs-gutter-x));
+            }
+        }
     </style>
 </head>
 
-<body>
-    <div class="container-xxl vh-100 d-flex flex-column">
-        <div class="row py-2 mb-1">
-            <div class="col-3 fs-4 d-flex align-items-center">
+<body class="overflow-hidden">
+    <div class="container-xxl vh-100 d-flex flex-column overflow-hidden">
+        <div id="header-row" class="row py-2 mb-1">
+            <div id="logo-column" class="col-3 fs-4 d-flex align-items-center">
                 <a href="/" class="text-dark">Past<strong>Events</strong>.org</a>
             </div>
-            <div class="col text-end fs-7">
-                A structured, searchable archive of Wikipedia's <a
-                    href="https://en.wikipedia.org/wiki/Portal:Current_events">"Current Events"</a> portal
-                <br>
-                More than <strong>90,000 events</strong> spanning <strong>20 years</strong> available, updated daily
+            <div class="col fs-7 d-flex align-items-center justify-content-end text-end">
+                <span class="mobile-hidden">
+                    A structured, searchable archive of Wikipedia's
+                    <a href="https://en.wikipedia.org/wiki/Portal:Current_events">"Current Events"</a> portal
+                    <br>
+                    More than <strong>90,000 events</strong> spanning <strong>20 years</strong> available, updated daily
+                </span>
+                <a href="#" class="fs-6 mobile-visible" data-bs-toggle="modal" data-bs-target="#about">About</a>
             </div>
         </div>
 
@@ -159,7 +266,7 @@ Copyright (C) 2022  Philipp Emanuel Weidmann <pew@worldwidemann.com>
                         data-bs-target="#search-help">?</button>
                 </div>
             </div>
-            <div class="col-4">
+            <div id="categories-column" class="col-4">
                 <select id="categories" class="selectpicker form-control" multiple title="Select categories">
                     <option>Armed conflicts and attacks</option>
                     <option>Arts and culture</option>
@@ -175,7 +282,7 @@ Copyright (C) 2022  Philipp Emanuel Weidmann <pew@worldwidemann.com>
             </div>
         </div>
 
-        <div class="row py-3">
+        <div id="date-range-row" class="row py-3">
             <div class="col">
                 <div id="date-range"></div>
             </div>
@@ -183,12 +290,40 @@ Copyright (C) 2022  Philipp Emanuel Weidmann <pew@worldwidemann.com>
 
         <div id="events" class="flex-grow-1"></div>
 
-        <div class="row pt-3 pb-2 fs-7">
+        <div class="row pt-3 pb-2 fs-7 mobile-hidden">
             <div class="col">
                 Made with &#128148; by <a href="https://worldwidemann.com/">Philipp Emanuel Weidmann</a>
             </div>
-            <div class="col text-end">
+            <div class="col-5 text-end">
                 <a href="#" data-bs-toggle="modal" data-bs-target="#licenses">Code and content licenses</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="about" tabindex="-1" aria-labelledby="about-label" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="about-label">About PastEvents.org</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        PastEvents.org is a structured, searchable archive of Wikipedia's
+                        <a href="https://en.wikipedia.org/wiki/Portal:Current_events">"Current Events"</a> portal.
+                        It contains more than <strong>90,000 events</strong> spanning <strong>20 years</strong>,
+                        and is updated daily.
+                    </p>
+                    <p>
+                        PastEvents.org is built <em>entirely</em> using Free and Open Source Software and Free Content.
+                        See <a href="#" data-bs-toggle="modal" data-bs-target="#licenses">code and content licenses</a>
+                        for more information.
+                    </p>
+                    <p>
+                        PastEvents.org is made with &#128148; by
+                        <a href="https://worldwidemann.com/">Philipp Emanuel Weidmann</a>.
+                    </p>
+                </div>
             </div>
         </div>
     </div>
@@ -370,11 +505,33 @@ Copyright (C) 2022  Philipp Emanuel Weidmann <pew@worldwidemann.com>
 
         const eventsTable = new Tabulator('#events', {
             layout: 'fitColumns',
+            responsiveLayout: 'collapse',
+            responsiveLayoutCollapseFormatter: columns => {
+                const containerElement = document.createElement('div');
+
+                for (const column of columns) {
+                    if (column.value !== '&nbsp;') {
+                        const itemElement = document.createElement('p');
+
+                        const titleElement = document.createElement('strong');
+                        titleElement.textContent = column.title;
+                        itemElement.append(titleElement);
+
+                        itemElement.append(document.createElement('br'));
+
+                        itemElement.insertAdjacentHTML('beforeend', column.value);
+
+                        containerElement.append(itemElement);
+                    }
+                }
+
+                return containerElement.hasChildNodes() ? containerElement : '';
+            },
             columns: [
-                { title: 'Date', field: 'date', formatter: 'html', width: 120, resizable: false },
-                { title: 'Event', field: 'description', formatter: htmlWrapFormatter, variableHeight: true, widthGrow: 3, headerSort: false, resizable: false },
-                { title: 'Context', field: 'context', formatter: htmlWrapFormatter, variableHeight: true, widthGrow: 1, headerSort: false, resizable: false },
-                { title: 'Category', field: 'category', formatter: 'textarea', widthGrow: 1, headerSort: false, resizable: false }
+                { title: 'Date', field: 'date', formatter: 'html', widthGrow: 1, minWidth: 105, maxWidth: 120, resizable: false },
+                { title: 'Event', field: 'description', formatter: htmlWrapFormatter, variableHeight: true, widthGrow: 3, minWidth: 250, headerSort: false, resizable: false },
+                { title: 'Context', field: 'context', formatter: htmlWrapFormatter, variableHeight: true, widthGrow: 1, minWidth: 180, headerSort: false, resizable: false },
+                { title: 'Category', field: 'category', formatter: 'textarea', widthGrow: 1, minWidth: 130, headerSort: false, resizable: false }
             ],
             ajaxURL: '/events',
             progressiveLoad: 'scroll',
