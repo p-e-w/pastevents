@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # Copyright (C) 2022  Philipp Emanuel Weidmann <pew@worldwidemann.com>
 
+import re
 from copy import copy
 from datetime import datetime, date
 from argparse import ArgumentParser
@@ -9,10 +10,45 @@ import requests
 from dateutil.relativedelta import relativedelta
 from bs4 import BeautifulSoup
 
+from countries import FLAG_DATA
 from common import Session, Base, Event, engine, WIKIPEDIA_URL
 
 
 MIN_DATE = date(2003, 1, 1)
+
+
+country_names = list(FLAG_DATA)
+
+# Sort names by descending length to ensure that if the name of one country
+# contains the name of another, the longer name is matched wherever it occurs.
+country_names.sort(key=len, reverse=True)
+
+country_names = map(re.escape, country_names)
+
+country_name_regex = re.compile(r"(?<!\w)(?:" + "|".join(country_names) + r")(?!\w)")
+
+used_flags = set()
+
+
+def insert_flags(html):
+    def replace(match):
+        country_name = match.group(0)
+        flag = FLAG_DATA[country_name]
+
+        if flag in used_flags:
+            return country_name
+        else:
+            used_flags.add(flag)
+            # A non-breaking space between flag and country name
+            # prevents them from being wrapped into separate lines.
+            return f"{flag}\xa0{country_name}"
+
+    document = BeautifulSoup(html, "html.parser")
+
+    for string in document.find_all(string=True):
+        string.replace_with(country_name_regex.sub(replace, str(string)))
+
+    return str(document)
 
 
 def normalize_category(category):
@@ -90,11 +126,15 @@ def get_events(html):
         for element in content_element.find_all(True, recursive=False):
             if element.name == "ul":
                 for event_element, context_elements in get_event_elements(element):
+                    # Reset the used flags tracker before processing each event
+                    # so that each flag is inserted at most once into an event's data.
+                    used_flags.clear()
+
                     yield Event(
                         date=date,
-                        description=event_element.decode_contents(),
+                        description=insert_flags(event_element.decode_contents()),
                         context=[
-                            context_element.decode_contents()
+                            insert_flags(context_element.decode_contents())
                             for context_element in context_elements
                         ],
                         category=normalize_category(category),
