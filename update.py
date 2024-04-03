@@ -113,7 +113,7 @@ def get_events(html):
             link_element["href"] = WIKIPEDIA_URL + link_element["href"]
 
     # Remove image thumbnails.
-    for thumbnail_element in document.find_all("div", class_="thumb"):
+    for thumbnail_element in document.find_all("figure"):
         thumbnail_element.decompose()
 
     for day_element in document.find_all("div", class_="current-events-main"):

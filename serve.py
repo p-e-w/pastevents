@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # Copyright (C) 2022  Philipp Emanuel Weidmann <pew@worldwidemann.com>
 
+from datetime import datetime
+
 from flask import Flask, request, render_template
 from sqlalchemy import func
 from sqlalchemy.orm import scoped_session
@@ -20,6 +22,10 @@ app = Flask(__name__)
 session = scoped_session(Session, scopefunc=_ident_func)
 
 Base.query = session.query_property()
+
+
+def parse_date(date_string):
+    return datetime.strptime(date_string, "%Y-%m-%d").date()
 
 
 @app.teardown_appcontext
@@ -74,7 +80,7 @@ def events():
         query = query.filter(Event.category.in_(categories))
 
     if min_date and max_date:
-        query = query.filter(Event.date.between(min_date, max_date))
+        query = query.filter(Event.date.between(parse_date(min_date), parse_date(max_date)))
 
     query = query.order_by(sort, Event.id).limit(size).offset((page - 1) * size)
 

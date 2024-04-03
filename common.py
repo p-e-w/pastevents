@@ -12,6 +12,7 @@ from sqlalchemy import (
     ARRAY,
     Index,
     func,
+    literal_column,
 )
 from sqlalchemy.orm import sessionmaker, declarative_base
 
@@ -41,7 +42,7 @@ class Event(Base):
     __table_args__ = (
         Index(
             "search_index",
-            func.to_tsvector("english", search_text),
+            func.to_tsvector(literal_column("'english'"), search_text),
             postgresql_using="gin",
         ),
     )
